@@ -1,1 +1,3 @@
 *.pyc
+*.kicad_pcb-bak
+*.bak

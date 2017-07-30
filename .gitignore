@@ -1,3 +1,4 @@
 *.pyc
 *.kicad_pcb-bak
 *.bak
+_autosave-*.pro

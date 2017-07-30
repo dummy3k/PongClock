@@ -18,9 +18,9 @@ G01 Z-1.05
 (Block-expand: 1)
 (Block-enable: 1)
 
-G01 X10
-G01 Y-0.363
-G01 X-10
+G01 X5
+G01 Y-0.2
+G01 X-5
 
 (Block-name: X-Axis)
 (Block-expand: 1)

@@ -275,6 +275,7 @@ void setup() {
   Serial.begin(9600);
   //delay(1000);
   
+  Serial.println(F("PongClock v1.54"));
   Serial.println(F(__DATE__));
   Serial.println(F(__TIME__));
 
@@ -381,6 +382,18 @@ void handle_serial() {
         //setDS3231time(30,22,15,7,11,3,17);
         now = getTime();
         switch (cmd) {
+          case 'Y':
+          case 'y':
+            setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, now.month, value);
+            break;
+          case 'N':
+          case 'n':
+            setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, value, now.year);
+            break;
+          case 'D':
+          case 'd':
+            setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, value, now.month, now.year);
+            break;
           case 'H':
           case 'h':
             setDS3231time(now.second, now.minute, value, now.dayOfWeek, now.day, now.month, now.year);

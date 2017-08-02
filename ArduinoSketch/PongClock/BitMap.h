@@ -17,6 +17,10 @@ public:
     uint8_t x = 0;
     uint8_t y = 0;
 
+    //flip axis
+    source_x = DISPLAY_WIDTH - 1 - source_x;
+    source_y = DISPLAY_HEIGHT - 1 - source_y;
+    
     if (source_y >= 16) {
         x = 0;
     } else if (source_y >= 8) {

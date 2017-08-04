@@ -4,6 +4,7 @@
 #include "const.h"
 //#include "Timer.h"
 #include "DateTime.h"
+#include "pcint.h"
 
 //Timer t;
 //time_t bootTime;
@@ -280,6 +281,16 @@ void setup() {
   Serial.println(F(__TIME__));
 
   randomSeed(analogRead(0));
+
+  pinMode(ROT_SW, INPUT);
+  pinMode(ROT_A, INPUT);
+  pinMode(ROT_B, INPUT);
+
+  delay(3000);
+  PCattachInterrupt(ROT_SW, intROT_SW, CHANGE);  
+  PCattachInterrupt(ROT_A, any_int_changed, CHANGE);  
+  PCattachInterrupt(ROT_B, any_int_changed, CHANGE);  
+  
   Serial.println(F("READY"));
   
   setup_done = true;
@@ -316,6 +327,47 @@ void setup() {
 
 }
 
+volatile int ROT_SW_value = 0;
+volatile int ROT_value = 0;
+
+void intROT_SW() {
+  //Serial.println("SW");
+  ROT_SW_value++;
+}
+
+void intROT_A() {
+  Serial.println("A");
+}
+
+void intROT_B() {
+  Serial.println("B");
+}
+
+
+void any_int_changed() {
+  static unsigned char rotary_state = 0;
+  bool A = digitalRead(ROT_A); 
+  bool B = digitalRead(ROT_B); 
+
+  rotary_state = rotary_state << 1;
+  if (A) rotary_state |= 1;
+  rotary_state = rotary_state << 1;
+  if (B) rotary_state |= 1;
+
+  if (rotary_state == B01001011) {
+    countUp();
+  } else if (rotary_state == B10000111) {
+    countDown();
+  }
+}
+
+void countUp() {
+  ROT_value++;
+}
+
+void countDown() {
+  ROT_value--;
+}
 
 void loop() {
 
@@ -334,10 +386,24 @@ void loop() {
       bmp.sendData();
     }
   }
+
   */
   
   handle_serial();
-  
+
+  static int last_sw = 0;
+  if (ROT_SW_value != last_sw) {
+    Serial.println(F("SW!"));
+    last_sw = ROT_SW_value;
+  }
+  static int last_rot = 0;
+  if (ROT_value != last_rot) {
+    Serial.print(last_rot);
+    Serial.print('>');
+    Serial.println(ROT_value);
+    last_rot = ROT_value;
+  }
+
 }
 
 void handle_serial() {

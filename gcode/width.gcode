@@ -20,7 +20,7 @@ G01 Z-1.05
 (Block-enable: 1)
 
 G01 X5
-G01 Y-0.15
+G01 Y-0.65
 G01 X-5
 
 (Block-name: X-Axis)

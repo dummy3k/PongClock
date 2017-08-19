@@ -13,14 +13,14 @@ G00 Z1
 
 M03 S15000 F90
 G04 P2
-G01 Z-1.05
+G01 Z-1.1
 
 (Block-name: X-Axis)
 (Block-expand: 1)
 (Block-enable: 1)
 
 G01 X5
-G01 Y-0.65
+G01 Y-0.325
 G01 X-5
 
 (Block-name: X-Axis)

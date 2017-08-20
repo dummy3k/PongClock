@@ -10,10 +10,12 @@
 //time_t bootTime;
 
 void initialise_MAX7219() {
-  digitalWrite(MAX7219_CS, HIGH);
   pinMode(MAX7219_DIN, OUTPUT);
   pinMode(MAX7219_CS, OUTPUT);
   pinMode(MAX7219_CLK, OUTPUT);
+
+  digitalWrite(MAX7219_CS, HIGH);
+  //delay(100);
 
   output_all(0x0c, 0x01); //shutdown register - normal operation
   delay(1);
@@ -31,8 +33,6 @@ void initialise_MAX7219() {
   //output_all(0x02, 0x01);
   
 }
-
-
 
 struct Vector {
   double x;
@@ -269,35 +269,174 @@ struct GameState {
   
 } game_state;
 
+class Button {
+  my_time_t last;
+  volatile unsigned int count = 0;
+
+public:
+  void interupt() {
+    count++;
+  }
+
+  bool pushed() {
+    if (count == 0) return false;
+    count = 0 ;
+
+    if (time_delta(last, millis()) < 500) {
+      return false;
+    }
+    last = millis();
+    return true;
+  }
+  
+};
+
+Button btSW1;
+Button btSW2;
+
+struct ClockState {
+  enum {
+    CLOCK_STATE_PLAY,
+    CLOCK_STATE_SET_HOUR,
+    CLOCK_STATE_SET_MINUTE,
+    CLOCK_STATE_SET_SECOND,
+    CLOCK_STATE_MAX
+  } state = CLOCK_STATE_PLAY;
+
+  my_time_t last_sw1;
+   
+  void loop() {
+    if (btSW1.pushed()) {
+      state = (int)state + 1;
+      state %= CLOCK_STATE_MAX;
+      Serial.print(F("state: "));
+      Serial.println(state);
+      
+      if (state == CLOCK_STATE_PLAY) {
+        game_state.restart();
+      }
+
+      //reset SW2
+      btSW2.pushed();
+    }
+    
+    if (state == CLOCK_STATE_PLAY) {
+      game_state.loop();
+    } else {
+
+      DateTime now = getTime();
+
+      if (btSW2.pushed()) {
+        switch (state) {
+          case CLOCK_STATE_SET_HOUR:
+            now.hour = (now.hour + 1) % 24;
+            break;
+          case CLOCK_STATE_SET_MINUTE:
+            now.minute = (now.minute + 1) % 60;
+            break;
+          case CLOCK_STATE_SET_SECOND:
+            now.second = (now.second + 1) % 60;
+            break;
+        }
+        setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, now.month, now.year);
+      }
+
+      
+      Bitmap bmp;
+      bool blink_on = (millis() / 1000 % 2 == 1);
+
+      if (state != CLOCK_STATE_SET_HOUR || blink_on) {
+        bmp.digit(2, 8, now.hour / 10);
+        bmp.digit(6, 8, now.hour % 10);
+      }
+
+      if (blink_on) {
+        bmp.setPixel(10, 9);
+        bmp.setPixel(10, 11);
+      }
+
+      if (state != CLOCK_STATE_SET_MINUTE || blink_on) {
+        bmp.digit(12, 8, now.minute / 10);
+        bmp.digit(16, 8, now.minute % 10);
+      }
+
+      if (blink_on) {
+        bmp.setPixel(20, 9);
+        bmp.setPixel(20, 11);
+      }
+
+      if (state != CLOCK_STATE_SET_SECOND || blink_on) {
+        bmp.digit(22, 8, now.second / 10);
+        bmp.digit(26, 8, now.second % 10);
+      }
+
+      /*
+      if (state != CLOCK_STATE_SET_HOUR || blink_on) {
+        bmp.digit(8, 8, now.hour / 10);
+        bmp.digit(12, 8, now.hour % 10);
+      }
+
+      if (state != CLOCK_STATE_SET_MINUTE || blink_on) {
+        bmp.digit(17, 8, now.minute / 10);
+        bmp.digit(21, 8, now.minute % 10);
+      }
+      */
+  
+      bmp.sendData();
+      
+    }
+  }
+} clock_state;
+
+
 void setup() {
+  //delay(1000);
   initialise_MAX7219();
   Wire.begin();
 
   Serial.begin(9600);
-  //delay(1000);
   
-  Serial.println(F("PongClock v1.54"));
+  Serial.println(F("PongClock v1.564"));
   Serial.println(F(__DATE__));
   Serial.println(F(__TIME__));
 
   randomSeed(analogRead(0));
 
+
+  #ifdef ROTARY_ENABLE
   pinMode(ROT_SW, INPUT);
   pinMode(ROT_A, INPUT);
   pinMode(ROT_B, INPUT);
 
-  delay(3000);
   PCattachInterrupt(ROT_SW, intROT_SW, CHANGE);  
   PCattachInterrupt(ROT_A, any_int_changed, CHANGE);  
   PCattachInterrupt(ROT_B, any_int_changed, CHANGE);  
+  #endif
+
+  pinMode(SW1, INPUT);
+  pinMode(SW2, INPUT);
+  PCattachInterrupt(SW1, intSW1, RISING);  
+  PCattachInterrupt(SW2, intSW2, RISING);  
   
+  //delay(3000);
   Serial.println(F("READY"));
   
   setup_done = true;
   game_state.restart();
 
   displayTime();  
+
+
   /*
+  Bitmap bmp;
+  for (int y = 0; y < 24; y+=3) {
+    for (int x = 0; x < 32; x+=3) {
+      bmp.setPixel(x, y);
+    }
+  }
+  bmp.sendData();  
+
+
   setDS3231time(30,22,15,4,26,11,14);
   delay(1000);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -327,6 +466,16 @@ void setup() {
 
 }
 
+void intSW1() {
+  btSW1.interupt();
+}
+
+void intSW2() {
+  btSW2.interupt();
+}
+
+
+#ifdef ROTARY_ENABLE
 volatile int ROT_SW_value = 0;
 volatile int ROT_value = 0;
 
@@ -369,16 +518,10 @@ void countDown() {
   ROT_value--;
 }
 
-void loop() {
+#endif
 
-  game_state.loop();  
-  
-  
+void loop() {
   /*
-  Serial.println(F(__TIME__));
-  delay(1000);
-  displayTime();
-  delay(1000);
   for (int y = 0; y < 24; y++) {
     for (int x = 0; x < 32; x++) {
       Bitmap bmp;
@@ -386,11 +529,27 @@ void loop() {
       bmp.sendData();
     }
   }
+  
+  displayTime();
+  delay(1000);
+  
 
+  
+  delay(1000);
+  delay(1000);
+  
+  Serial.println(F(__TIME__));
+  Serial.print(digitalRead(SW1));
+  Serial.println(digitalRead(SW2));
   */
   
   handle_serial();
+  //game_state.loop();
+  clock_state.loop();
 
+
+
+  #ifdef ROTARY_ENABLE
   static int last_sw = 0;
   if (ROT_SW_value != last_sw) {
     Serial.println(F("SW!"));
@@ -403,7 +562,7 @@ void loop() {
     Serial.println(ROT_value);
     last_rot = ROT_value;
   }
-
+  #endif
 }
 
 void handle_serial() {
@@ -619,19 +778,17 @@ void op_0x02() {
   }
 }
 
-void output_all(byte address, byte data)
-{
+void output_all(byte address, byte data) {
   digitalWrite(MAX7219_CS, LOW);
   for (int i=0; i<MAX7219_COUNT; i++) {
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, address);
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, data);
   }
   digitalWrite(MAX7219_CS, HIGH);
+  delay(1);
 }
 
-
-void output(byte address, byte data)
-{
+void output(byte address, byte data) {
   digitalWrite(MAX7219_CS, LOW);
   shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, address);
   shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, data);

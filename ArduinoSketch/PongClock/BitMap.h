@@ -17,18 +17,24 @@ public:
     uint8_t x = 0;
     uint8_t y = 0;
 
+    /*
+    */
     //flip axis
     source_x = DISPLAY_WIDTH - 1 - source_x;
     source_y = DISPLAY_HEIGHT - 1 - source_y;
-    
+
     if (source_y >= 16) {
         x = 0;
     } else if (source_y >= 8) {
         x = 4;
+
+        //flip middle panel
+        source_x = DISPLAY_WIDTH - 1 - source_x;
+        source_y = 7 - source_y;
     } else {
         x = 8;
     }
-        
+    
     x += source_x / 8;
     y = source_y % 8;
     byte v = 1 << 7 - source_x % 8;

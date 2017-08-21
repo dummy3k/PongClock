@@ -388,10 +388,13 @@ struct ClockState {
   }
 } clock_state;
 
-
 void setup() {
-  //delay(1000);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+  delay(3000);
   initialise_MAX7219();
+  digitalWrite(LED, LOW);
+  
   Wire.begin();
 
   Serial.begin(9600);

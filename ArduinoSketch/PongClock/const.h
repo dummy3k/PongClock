@@ -17,6 +17,7 @@
 
 #define SW1 3
 #define SW2 4
+#define LED 2
 
 
 #endif

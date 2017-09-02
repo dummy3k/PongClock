@@ -394,6 +394,7 @@ void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
   delay(3000);
+  
   initialise_MAX7219();
   digitalWrite(LED, LOW);
   

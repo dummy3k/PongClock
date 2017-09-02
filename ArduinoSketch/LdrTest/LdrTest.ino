@@ -1,4 +1,4 @@
-#define LDR 5
+#define LDR 3
 
 void setup() {
   Serial.begin(9600);

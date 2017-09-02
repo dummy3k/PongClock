@@ -5,9 +5,9 @@
 #define DISPLAY_HEIGHT 24
 #define MAX7219_COUNT 12
 
-#define MAX7219_CLK 7
-#define MAX7219_CS 6
-#define MAX7219_DIN 5
+#define MAX7219_CLK 6
+#define MAX7219_CS 5
+#define MAX7219_DIN 7
 
 #ifdef ROTARY_ENABLE
 #define ROT_SW 3

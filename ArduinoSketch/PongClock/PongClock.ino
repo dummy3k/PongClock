@@ -17,10 +17,12 @@ void initialise_MAX7219() {
   digitalWrite(MAX7219_CS, HIGH);
   //delay(100);
 
+  output_all(0x0f, 0x00); //display test register - test mode off
+  delay(1);
+
   output_all(0x0c, 0x01); //shutdown register - normal operation
   delay(1);
   
-  output_all(0x0f, 0x00); //display test register - test mode off
   output_all(0x0b, 0x07); //scan limit register - display digits 0 thru 7
   output_all(0x0a, 0x00); //intensity register - min brightness
   //output_all(0x0a, 0x0f); //intensity register - max brightness
@@ -429,7 +431,8 @@ void setup() {
 
   displayTime();  
 
-
+  
+  
   /*
   Bitmap bmp;
   for (int y = 0; y < 24; y+=3) {
@@ -437,7 +440,7 @@ void setup() {
       bmp.setPixel(x, y);
     }
   }
-  bmp.sendData();  
+  bmp.sendData();
 
 
   setDS3231time(30,22,15,4,26,11,14);
@@ -524,14 +527,16 @@ void countDown() {
 #endif
 
 void loop() {
+
   /*
-  for (int y = 0; y < 24; y++) {
+  for (int y = 16; y < 24; y++) {
     for (int x = 0; x < 32; x++) {
       Bitmap bmp;
       bmp.setPixel(x, y);
       bmp.sendData();
     }
   }
+  Serial.println(F("Loop"));
   
   displayTime();
   delay(1000);
@@ -544,12 +549,13 @@ void loop() {
   Serial.println(F(__TIME__));
   Serial.print(digitalRead(SW1));
   Serial.println(digitalRead(SW2));
+
+  //game_state.loop();
+  
   */
   
   handle_serial();
-  //game_state.loop();
   clock_state.loop();
-
 
 
   #ifdef ROTARY_ENABLE

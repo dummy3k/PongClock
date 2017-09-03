@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name PongClock)(type KiCad)(uri ${KIPRJMOD}/footprints)(options "")(descr ""))
+  (lib (name mod_switch)(type KiCad)(uri ${KIPRJMOD}/mod_switch/w_switch.pretty)(options "")(descr ""))
+)

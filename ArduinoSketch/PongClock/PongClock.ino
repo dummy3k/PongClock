@@ -17,11 +17,13 @@ void initialise_MAX7219() {
   digitalWrite(MAX7219_CS, HIGH);
   //delay(100);
 
+
+
+  
   output_all(0x0f, 0x00); //display test register - test mode off
   delay(1);
 
-  output_all(0x0c, 0x01); //shutdown register - normal operation
-  delay(1);
+
   
   output_all(0x0b, 0x07); //scan limit register - display digits 0 thru 7
   output_all(0x0a, 0x00); //intensity register - min brightness
@@ -31,6 +33,9 @@ void initialise_MAX7219() {
   for (byte addr = 0x01; addr < 0x09; addr++) {
     output_all(addr, 0x00);
   }
+
+  output_all(0x0c, 0x01); //shutdown register - normal operation
+  delay(1);
   
   //output_all(0x02, 0x01);
   

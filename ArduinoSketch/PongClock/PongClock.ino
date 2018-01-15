@@ -14,7 +14,7 @@ void initialise_MAX7219() {
   pinMode(MAX7219_CS, OUTPUT);
   pinMode(MAX7219_CLK, OUTPUT);
 
-  digitalWrite(MAX7219_CS, HIGH);
+  //digitalWrite(MAX7219_CS, HIGH);
   //delay(100);
 
 
@@ -25,20 +25,20 @@ void initialise_MAX7219() {
 
 
   output_all(0x0f, 0x00); //display test register - test mode off
-  delay(1);
+  //delay(1);
     
   output_all(0x0b, 0x07); //scan limit register - display digits 0 thru 7
   output_all(0x0a, 0x00); //intensity register - min brightness
   //output_all(0x0a, 0x0f); //intensity register - max brightness
   output_all(0x09, 0x00); //decode mode register - no decode
 
+  for (byte addr = 0x01; addr < 0x09; addr++) {
+    output_all(addr, 0x00);
+  }
 
   output_all(0x0c, 0x01); //shutdown register - normal operation
   //delay(1);
   
-  for (byte addr = 0x01; addr < 0x09; addr++) {
-    output_all(addr, 0x00);
-  }
 
   
   //output_all(0x02, 0x01);
@@ -804,7 +804,7 @@ void output_all(byte address, byte data) {
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, data);
   }
   digitalWrite(MAX7219_CS, HIGH);
-  delay(1);
+  //delay(1);
 }
 
 void output(byte address, byte data) {

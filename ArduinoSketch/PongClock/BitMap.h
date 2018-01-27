@@ -28,9 +28,12 @@ public:
     } else if (source_y >= 8) {
         x = 4;
 
+        
+#if BOARD_VERSION != 154
         //flip middle panel
         source_x = DISPLAY_WIDTH - 1 - source_x;
         source_y = 7 - source_y;
+#endif
     } else {
         x = 8;
     }

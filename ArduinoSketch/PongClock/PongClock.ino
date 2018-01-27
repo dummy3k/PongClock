@@ -19,14 +19,14 @@ void initialise_MAX7219() {
 
 
 
-  
+
 
 
 
 
   output_all(0x0f, 0x00); //display test register - test mode off
   //delay(1);
-    
+
   output_all(0x0b, 0x07); //scan limit register - display digits 0 thru 7
   output_all(0x0a, 0x00); //intensity register - min brightness
   //output_all(0x0a, 0x0f); //intensity register - max brightness
@@ -38,11 +38,11 @@ void initialise_MAX7219() {
 
   output_all(0x0c, 0x01); //shutdown register - normal operation
   //delay(1);
-  
 
-  
+
+
   //output_all(0x02, 0x01);
-  
+
 }
 
 struct Vector {
@@ -107,7 +107,7 @@ struct Paddle {
   }
 
   void draw(Bitmap& bmp) {
-    for (int i=pos.y - 2; i <= pos.y + 2; i++) {
+    for (int i = pos.y - 2; i <= pos.y + 2; i++) {
       bmp.setPixel(pos.x, i);
     }
   }
@@ -115,7 +115,7 @@ struct Paddle {
   bool hitTest(int y) {
     return (y >= pos.y - 2 && y <= pos.y + 2);
   }
-  
+
 };
 
 struct GameState {
@@ -128,14 +128,14 @@ struct GameState {
   my_time_t round_length = 60000;
   byte score_hour;
   byte score_minute;
-  
+
   Paddle leftPaddle  = {Vector(1, DISPLAY_HEIGHT / 2)};
   Paddle rightPaddle = {Vector(DISPLAY_WIDTH - 2, DISPLAY_HEIGHT / 2)};
-  
+
   GameState() {
     //restart();
   }
-  
+
   void restart() {
     start_pos = {DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2};
     impulse = Vector(random(1, 5), random(1, 5));
@@ -153,9 +153,9 @@ struct GameState {
     score_hour = now.hour;
     score_minute = now.minute;
     /*
-    Serial.print(score_hour);
-    Serial.print(' ');
-    Serial.println(score_minute);
+      Serial.print(score_hour);
+      Serial.print(' ');
+      Serial.println(score_minute);
     */
 
     start = millis();
@@ -175,17 +175,17 @@ struct GameState {
       Serial.print(F("t: "));
       Serial.println(t);
     }
-  
+
     Vector pos_t(start_pos.x + impulse.x * t,
                  start_pos.y + impulse.y * t);
-  
+
     if (slow_mode) {
       Serial.print(F("pos_t: "));
       Serial.print(pos_t.x);
       Serial.print(' ');
       Serial.println(pos_t.y);
     }
-  
+
     if (pos_t.y < 0 || pos_t.y >= DISPLAY_HEIGHT) {
       impulse.y *= -1;
       start_pos = last_pos;
@@ -205,20 +205,20 @@ struct GameState {
       restart();
       return;
     }
-    
+
     Bitmap bmp;
     bmp.setPixel(pos_t.x, pos_t.y);
 
     /*
-    Paddle* targetPaddle;
-    if (impulse.x > 0) {
+      Paddle* targetPaddle;
+      if (impulse.x > 0) {
       targetPaddle = &rightPaddle;
-    } else {
+      } else {
       targetPaddle = &leftPaddle;
-    }
+      }
     */
 
-    
+
     if (time_delta(round_start, millis()) < round_length) {
       if (impulse.x > 0) {
         rightPaddle.track(pos_t.y);
@@ -242,9 +242,9 @@ struct GameState {
     }
 
     /*
-    targetPaddle->avoid(pos_t.y);
+      targetPaddle->avoid(pos_t.y);
     */
-    
+
     leftPaddle.draw(bmp);
     rightPaddle.draw(bmp);
 
@@ -253,57 +253,59 @@ struct GameState {
 
     bmp.digit(17, 18, score_minute / 10);
     bmp.digit(21, 18, score_minute % 10);
-    
+
     /*
-    paddle_left_y = pos_t.y;
-    paddle_right_y = pos_t.y;
-    
-    for (int i=paddle_left_y - 2; i <= paddle_left_y + 2; i++) {
+      paddle_left_y = pos_t.y;
+      paddle_right_y = pos_t.y;
+
+      for (int i=paddle_left_y - 2; i <= paddle_left_y + 2; i++) {
       bmp.setPixel(1, i);
-    }
-    for (int i=paddle_right_y - 2; i <= paddle_right_y + 2; i++) {
+      }
+      for (int i=paddle_right_y - 2; i <= paddle_right_y + 2; i++) {
       bmp.setPixel(30, i);
-    }
+      }
     */
-    
+
     bmp.sendData();
-  
+
     last_pos = pos_t;
 
     if (slow_mode) {
       delay(1000);
     }
-    
+
   }
 
 
-  
+
 } game_state;
 
 class Button {
-  my_time_t last;
-  volatile unsigned int count = 0;
+    my_time_t last;
+    volatile unsigned int count = 0;
 
-public:
-  void interupt() {
-    count++;
-  }
-
-  bool pushed() {
-    if (count == 0) return false;
-    count = 0 ;
-
-    if (time_delta(last, millis()) < 500) {
-      return false;
+  public:
+    void interupt() {
+      count++;
     }
-    last = millis();
-    return true;
-  }
-  
+
+    bool pushed() {
+      if (count == 0) return false;
+      count = 0 ;
+
+      if (time_delta(last, millis()) < 500) {
+        return false;
+      }
+      last = millis();
+      return true;
+    }
+
 };
 
 Button btSW1;
+#ifdef SW2
 Button btSW2;
+#endif
 
 struct ClockState {
   enum {
@@ -315,28 +317,31 @@ struct ClockState {
   } state = CLOCK_STATE_PLAY;
 
   my_time_t last_sw1;
-   
+
   void loop() {
     if (btSW1.pushed()) {
       state = (int)state + 1;
       state %= CLOCK_STATE_MAX;
       Serial.print(F("state: "));
       Serial.println(state);
-      
+
       if (state == CLOCK_STATE_PLAY) {
         game_state.restart();
       }
 
+#ifdef SW2
       //reset SW2
       btSW2.pushed();
+#endif
     }
-    
+
     if (state == CLOCK_STATE_PLAY) {
       game_state.loop();
     } else {
 
       DateTime now = getTime();
 
+#ifdef SW2
       if (btSW2.pushed()) {
         switch (state) {
           case CLOCK_STATE_SET_HOUR:
@@ -351,8 +356,9 @@ struct ClockState {
         }
         setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, now.month, now.year);
       }
+#endif
 
-      
+
       Bitmap bmp;
       bool blink_on = (millis() / 1000 % 2 == 1);
 
@@ -382,19 +388,19 @@ struct ClockState {
       }
 
       /*
-      if (state != CLOCK_STATE_SET_HOUR || blink_on) {
+        if (state != CLOCK_STATE_SET_HOUR || blink_on) {
         bmp.digit(8, 8, now.hour / 10);
         bmp.digit(12, 8, now.hour % 10);
-      }
+        }
 
-      if (state != CLOCK_STATE_SET_MINUTE || blink_on) {
+        if (state != CLOCK_STATE_SET_MINUTE || blink_on) {
         bmp.digit(17, 8, now.minute / 10);
         bmp.digit(21, 8, now.minute % 10);
-      }
+        }
       */
-  
+
       bmp.sendData();
-      
+
     }
   }
 } clock_state;
@@ -403,14 +409,14 @@ void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
   delay(3000);
-  
+
   initialise_MAX7219();
   digitalWrite(LED, LOW);
-  
+
   Wire.begin();
 
   Serial.begin(9600);
-  
+
   Serial.println(F("PongClock v1.564"));
   Serial.println(F(__DATE__));
   Serial.println(F(__TIME__));
@@ -418,78 +424,86 @@ void setup() {
   randomSeed(analogRead(0));
 
 
-  #ifdef ROTARY_ENABLE
-  pinMode(ROT_SW, INPUT);
+#ifdef ROTARY_ENABLE
+  //pinMode(ROT_SW, INPUT);
   pinMode(ROT_A, INPUT);
   pinMode(ROT_B, INPUT);
 
-  PCattachInterrupt(ROT_SW, intROT_SW, CHANGE);  
-  PCattachInterrupt(ROT_A, any_int_changed, CHANGE);  
-  PCattachInterrupt(ROT_B, any_int_changed, CHANGE);  
-  #endif
+  //PCattachInterrupt(ROT_SW, intROT_SW, CHANGE);
+  PCattachInterrupt(ROT_A, any_int_changed, CHANGE);
+  PCattachInterrupt(ROT_B, any_int_changed, CHANGE);
+#endif
 
   pinMode(SW1, INPUT);
+
+#ifdef SW2
   pinMode(SW2, INPUT);
-  PCattachInterrupt(SW1, intSW1, RISING);  
-  PCattachInterrupt(SW2, intSW2, RISING);  
-  
+#endif
+  PCattachInterrupt(SW1, intSW1, RISING);
+#ifdef SW2
+  PCattachInterrupt(SW2, intSW2, RISING);
+#endif
+
   //delay(3000);
   Serial.println(F("READY"));
-  
+
   setup_done = true;
   game_state.restart();
 
-  displayTime();  
+  displayTime();
 
-  
-  
+
+
   /*
-  Bitmap bmp;
-  for (int y = 0; y < 24; y+=3) {
+    Bitmap bmp;
+    for (int y = 0; y < 24; y+=3) {
     for (int x = 0; x < 32; x+=3) {
       bmp.setPixel(x, y);
     }
-  }
-  bmp.sendData();
+    }
+    bmp.sendData();
 
 
-  setDS3231time(30,22,15,4,26,11,14);
-  delay(1000);
-  pinMode(LED_BUILTIN, OUTPUT);
-  bootTime = getTime();
+    setDS3231time(30,22,15,4,26,11,14);
+    delay(1000);
+    pinMode(LED_BUILTIN, OUTPUT);
+    bootTime = getTime();
 
-  Serial.print(F("Boot time: "));
-  Serial.println(bootTime.toString());
+    Serial.print(F("Boot time: "));
+    Serial.println(bootTime.toString());
 
-**********
+  **********
 
 
-  Vector v(3, 4);
-  if (v.x != 3) Serial.println(__LINE__);
-  if (v.y != 4) Serial.println(__LINE__);
-  if (v.length() != 5) Serial.println(__LINE__);
-  if (v.normalize().length() != 1) Serial.println(__LINE__);
-  Vector v2 = {127, 127} ;
-  if (v2.length() != 180) Serial.println(__LINE__);
-  Serial.println(v2.length());
+    Vector v(3, 4);
+    if (v.x != 3) Serial.println(__LINE__);
+    if (v.y != 4) Serial.println(__LINE__);
+    if (v.length() != 5) Serial.println(__LINE__);
+    if (v.normalize().length() != 1) Serial.println(__LINE__);
+    Vector v2 = {127, 127} ;
+    if (v2.length() != 180) Serial.println(__LINE__);
+    Serial.println(v2.length());
 
-  //1, 4, 9, 16
+    //1, 4, 9, 16
 
-**********
-  
+  **********
+
   */
-  
+
 
 }
 
 void intSW1() {
-  btSW1.interupt();
+  Serial.println("SW1");
+  //btSW1.interupt();
 }
 
+
+#ifdef SW2
 void intSW2() {
   btSW2.interupt();
 }
-
+#endif
 
 #ifdef ROTARY_ENABLE
 volatile int ROT_SW_value = 0;
@@ -511,8 +525,8 @@ void intROT_B() {
 
 void any_int_changed() {
   static unsigned char rotary_state = 0;
-  bool A = digitalRead(ROT_A); 
-  bool B = digitalRead(ROT_B); 
+  bool A = digitalRead(ROT_A);
+  bool B = digitalRead(ROT_B);
 
   rotary_state = rotary_state << 1;
   if (A) rotary_state |= 1;
@@ -539,36 +553,37 @@ void countDown() {
 void loop() {
 
   /*
-  for (int y = 16; y < 24; y++) {
+    for (int y = 16; y < 24; y++) {
     for (int x = 0; x < 32; x++) {
       Bitmap bmp;
       bmp.setPixel(x, y);
       bmp.sendData();
     }
-  }
-  Serial.println(F("Loop"));
-  
-  displayTime();
-  delay(1000);
-  
+    }
+    Serial.println(F("Loop"));
 
-  
-  delay(1000);
-  delay(1000);
-  
-  Serial.println(F(__TIME__));
-  Serial.print(digitalRead(SW1));
-  Serial.println(digitalRead(SW2));
+    displayTime();
+    delay(1000);
 
-  //game_state.loop();
-  
+
+
+    delay(1000);
+    delay(1000);
+
+    Serial.println(F(__TIME__));
+    Serial.print(digitalRead(SW1));
+    Serial.println(digitalRead(SW2));
+
+    //game_state.loop();
+
   */
-  
+  //Serial.println(digitalRead(SW1));
+
   handle_serial();
   clock_state.loop();
 
 
-  #ifdef ROTARY_ENABLE
+#ifdef ROTARY_ENABLE
   static int last_sw = 0;
   if (ROT_SW_value != last_sw) {
     Serial.println(F("SW!"));
@@ -581,31 +596,31 @@ void loop() {
     Serial.println(ROT_value);
     last_rot = ROT_value;
   }
-  #endif
+#endif
 }
 
 void handle_serial() {
   /*
-   * Output to all MAX7219
-   * 0x01 0x?? 0x??                 
-   * 
-   * DMA
-   * 0x02 <0x?? 0x??>{MAX7219_COUNT}
-   * 
-   * Buffered Memory
-   * 0x03 <0x??>{MAX7219_COUNT*8}
-   * 
-   * RLE
-   * 0x04 <0x??>{?}
-   * 
-   * Set Time
-   * $H23
-   * $M59
-   * $S59
-   * 
-   * Debug Mode
-   * 0xFF 0x01
-   */
+     Output to all MAX7219
+     0x01 0x?? 0x??
+
+     DMA
+     0x02 <0x?? 0x??>{MAX7219_COUNT}
+
+     Buffered Memory
+     0x03 <0x??>{MAX7219_COUNT*8}
+
+     RLE
+     0x04 <0x??>{?}
+
+     Set Time
+     $H23
+     $M59
+     $S59
+
+     Debug Mode
+     0xFF 0x01
+  */
   DateTime now;
   while (Serial.available() > 0) {
     byte op_code = Serial.read();
@@ -660,7 +675,7 @@ void handle_serial() {
 
         Serial.println(getTime().toString());
         break;
-        
+
       case 0x01:
         byte address;
         address = serial_get();
@@ -673,9 +688,9 @@ void handle_serial() {
           Serial.println(data);
         }
         /*
-        byte data = serial_get();
-        output_all(address, data);
-        output_all(serial_get(), serial_get());
+          byte data = serial_get();
+          output_all(address, data);
+          output_all(serial_get(), serial_get());
         */
         Serial.println(F("READY"));
         break;
@@ -700,9 +715,9 @@ void handle_serial() {
         Serial.print(F("BAD OP CODE "));
         Serial.println(op_code);
     }
-    
+
   }
-  
+
 }
 
 void op_0x04() {
@@ -713,19 +728,19 @@ void op_0x04() {
   while (idx < buffer_size) {
     byte value = serial_get();
     byte count = serial_get();
-    for (int i=0; i<count; i++) {
+    for (int i = 0; i < count; i++) {
       //please do no evil
       buffer[idx++] = value;
     }
   }
   /*
-  for (int i=0; i<buffer_size; i++) {
-    buffer[i] = serial_get();
-  }
-  */
-  
-  if (debug_mode) {
     for (int i=0; i<buffer_size; i++) {
+    buffer[i] = serial_get();
+    }
+  */
+
+  if (debug_mode) {
+    for (int i = 0; i < buffer_size; i++) {
       if (i > 0) {
         Serial.print(' ');
       }
@@ -736,23 +751,23 @@ void op_0x04() {
 
   for (byte row = 0; row < 8; row++) {
     digitalWrite(MAX7219_CS, LOW);
-    for (int i=0; i<MAX7219_COUNT; i++) {
+    for (int i = 0; i < MAX7219_COUNT; i++) {
       shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, 0x01 + row);
       shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, buffer[i + row * MAX7219_COUNT]);
     }
     digitalWrite(MAX7219_CS, HIGH);
   }
-  
+
 }
 
 void op_0x03() {
   const size_t buffer_size = 8 * MAX7219_COUNT;
   byte buffer[buffer_size];
-  for (int i=0; i<buffer_size; i++) {
+  for (int i = 0; i < buffer_size; i++) {
     buffer[i] = serial_get();
   }
   if (debug_mode) {
-    for (int i=0; i<buffer_size; i++) {
+    for (int i = 0; i < buffer_size; i++) {
       if (i > 0) {
         Serial.print(' ');
       }
@@ -763,43 +778,43 @@ void op_0x03() {
 
   for (byte row = 0; row < 8; row++) {
     digitalWrite(MAX7219_CS, LOW);
-    for (int i=0; i<MAX7219_COUNT; i++) {
+    for (int i = 0; i < MAX7219_COUNT; i++) {
       shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, 0x01 + row);
       shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, buffer[i + row * MAX7219_COUNT]);
     }
     digitalWrite(MAX7219_CS, HIGH);
   }
-  
+
 }
 
 void op_0x02() {
   const size_t buffer_size = 2 * MAX7219_COUNT;
   byte buffer[buffer_size];
-  for (int i=0; i<buffer_size; i++) {
+  for (int i = 0; i < buffer_size; i++) {
     buffer[i] = serial_get();
   }
 
   digitalWrite(MAX7219_CS, LOW);
-  for (int i=0; i<buffer_size; i++) {
+  for (int i = 0; i < buffer_size; i++) {
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, buffer[i]);
   }
   digitalWrite(MAX7219_CS, HIGH);
 
   if (debug_mode) {
-    for (int i=0; i<buffer_size; i++) {
+    for (int i = 0; i < buffer_size; i++) {
       if (i > 0) {
         Serial.print(' ');
       }
       Serial.print(buffer[i]);
     }
     Serial.println();
-    
+
   }
 }
 
 void output_all(byte address, byte data) {
   digitalWrite(MAX7219_CS, LOW);
-  for (int i=0; i<MAX7219_COUNT; i++) {
+  for (int i = 0; i < MAX7219_COUNT; i++) {
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, address);
     shiftOut(MAX7219_DIN, MAX7219_CLK, MSBFIRST, data);
   }

@@ -308,6 +308,10 @@ Button btSW1;
 Button btSW2;
 #endif
 
+#ifdef ROTARY_ENABLE
+volatile int ROT_value = 0;
+#endif
+
 struct ClockState {
   enum {
     CLOCK_STATE_PLAY,
@@ -358,7 +362,23 @@ struct ClockState {
         setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, now.month, now.year);
       }
 #endif
-
+#ifdef ROTARY_ENABLE
+  if(ROT_value != 0) {
+        switch (state) {
+          case CLOCK_STATE_SET_HOUR:
+            now.hour = (now.hour + ROT_value + 24) % 24;
+            break;
+          case CLOCK_STATE_SET_MINUTE:
+            now.minute = (now.minute + ROT_value + 60) % 60;
+            break;
+          case CLOCK_STATE_SET_SECOND:
+            now.second = (now.second + ROT_value + 60) % 60;
+            break;
+        }
+        setDS3231time(now.second, now.minute, now.hour, now.dayOfWeek, now.day, now.month, now.year);
+        ROT_value = 0;
+  }
+#endif
 
       Bitmap bmp;
       bool blink_on = (millis() / 1000 % 2 == 1);
@@ -496,8 +516,8 @@ void setup() {
 }
 
 void intSW1() {
-  Serial.println("SW1");
-  //btSW1.interupt();
+  //Serial.println("SW1");
+  btSW1.interupt();
 }
 
 
@@ -509,7 +529,6 @@ void intSW2() {
 
 #ifdef ROTARY_ENABLE
 volatile int ROT_SW_value = 0;
-volatile int ROT_value = 0;
 
 void intROT_SW() {
   //Serial.println("SW");
@@ -579,8 +598,7 @@ void loop() {
     //game_state.loop();
 
   */
-  //Serial.println(digitalRead(SW1));
-
+  
   handle_serial();
   clock_state.loop();
 

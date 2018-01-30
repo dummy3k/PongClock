@@ -14,6 +14,7 @@ void initialise_MAX7219() {
   pinMode(MAX7219_CS, OUTPUT);
   pinMode(MAX7219_CLK, OUTPUT);
 
+  digitalWrite(MAX7219_CS, LOW);
   //digitalWrite(MAX7219_CS, HIGH);
   //delay(100);
 
@@ -411,7 +412,8 @@ void setup() {
 
   Serial.begin(9600);
   
-  Serial.println(F("PongClock v1.564"));
+  Serial.print(F("PongClock v1"));
+  Serial.println(BOARD_VERSION);
   Serial.println(F(__DATE__));
   Serial.println(F(__TIME__));
 

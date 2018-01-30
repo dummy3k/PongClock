@@ -1,7 +1,7 @@
 #ifndef CONST_H
 #define CONST_H
 
-#define BOARD_VERSION 156
+#define BOARD_VERSION 159
 
 #define DISPLAY_WIDTH 32
 #define DISPLAY_HEIGHT 24
